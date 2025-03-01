@@ -55,14 +55,40 @@ const scrapePage = async (url) => {
         }
     });
 
-    // Extraer título y descripción
     const data = await page.evaluate(() => {
-        const title = document.querySelector(".title")?.innerText.trim() || null;
-        const description = document.querySelector(".description")?.innerText.trim() || null;
-        const compania = document.querySelector(".tc-tooltip")?.innerText.trim() || null;
+    const title = document.querySelector(".title")?.innerText.trim() || null;
+    const description = document.querySelector(".description")?.innerText.trim() || null;
 
-        return { title, description, compania};
-    });
+    // Seleccionar el contenedor principal de los datos del vuelo
+    const vuelosContainer = document.querySelector(".c-microservice__main");
+
+    let vuelos = [];
+
+    if (vuelosContainer) {
+        vuelos = Array.from(vuelosContainer.querySelectorAll(".dev-transport-info")).map(vuelo => {
+            // Extraer compañía del vuelo
+            const compania = document.querySelector(".tc-tooltip")?.innerText.trim() || null;
+            // Extraer clase del viaje
+            const claseViaje = document.querySelector('span.c-tag')?.innerText.trim() || null;
+            // Extraer número de vuelo usando el atributo `data-original-title="Vuelo"`
+            const numeroVueloEl = Array.from(document.querySelectorAll("span")).find(span => 
+                span.getAttribute("data-original-title") === "Vuelo"
+            );
+            const numeroVuelo = numeroVueloEl ? numeroVueloEl.innerText.trim() : null;
+            // Extraer datos de ida y vuelta
+            const detallesVuelo = Array.from(vuelo.querySelectorAll("span")).map(span => span.innerText.trim());
+
+            return {
+                compania,
+                claseViaje,
+                numeroVuelo,
+                detallesVuelo
+            };
+        });
+    }
+
+    return { title, description, vuelos };
+});
 
     await browser.close();
 
